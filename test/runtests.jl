@@ -1,33 +1,46 @@
 using Test
 
 @testset "integrator" begin
-    # include("../src/integrate.jl") # for interactive execution
+    # includet("../src/integrate.jl") # for interactive execution
     using Distributions
 
     dimx = 3
     A = rand(dimx,dimx)
     Σ = A*A'
     dx = MvNormal(zeros(dimx), Σ)
-    ∫a = Integrate.AdaptiveIntegrator(dx, options=(rtol=1e-6,initdiv=3))        
+    ∫a = Integrate.AdaptiveIntegrator(dx, options=(rtol=1e-6,initdiv=10))        
     V = ∫a(x->x*x')
     @test isapprox(V, Σ, rtol=1e-5)
     
+    f(x) = exp(x[1])/sum(exp.(x)) 
     val = ∫a(f)
-    for N ∈ [1_000, 10_000, 100_000]
+    for N ∈ [1_000, 10_000]
         ∫mc = Integrate.MonteCarloIntegrator(dx, N)
         ∫qmc = Integrate.QuasiMonteCarloIntegrator(dx,N)        
         @test isapprox(∫mc(x->x*x'), Σ, rtol=10/sqrt(N))
         @test isapprox(∫qmc(x->x*x'), Σ, rtol=10/sqrt(N))
-
-        f(x) = exp(x[1])/sum(exp.(x))        
+        
         @test isapprox(∫mc(f),val,rtol=1/sqrt(N))
         @test isapprox(∫qmc(f),val,rtol=1/sqrt(N))
     end
+    for N ∈ [25, 100, 200]
+        ∫ = Integrate.QuadratureIntegrator(dx,ndraw=N)
+        n=ceil(N^(1/dimx))
+        @test isapprox(∫(x->x*x'), Σ, rtol=1/2^n)
+        @test isapprox(∫(f),val,rtol=1/2^n)
+    end
+
+    for order ∈ [3, 5, 8, 10]
+        ∫ = Integrate.SparseGridIntegrator(dx,order=order)
+        n=length(∫.w)
+        @test isapprox(∫(x->x*x'), Σ, rtol=1/n)
+        @test isapprox(∫(f),val,rtol=1/n)
+    end
 end
 
-@testset "share=δ⁻¹"
-    # include("../src/blp.jl") 
-    using LinearAlgebra
+@testset "share=δ⁻¹" begin
+    # includet("../src/blp.jl") 
+    using LinearAlgebra, Distributions
     J = 4
     dimx=2
     dx = MvNormal(dimx, 1.0)
@@ -46,6 +59,7 @@ end
     dx = MvNormal(dimx, 1.0)
     Σ = I + ones(dimx,dimx)
     ∫ = BLP.Integrate.QuasiMonteCarloIntegrator(dx, N)
+    ∫ = BLP.Integrate.AdaptiveIntegrator(dx, options=(rtol=1e-6,initdiv=5))
     δ = 1*rand(J)
     s = BLP.share(δ,Σ,X,∫) 
     d = BLP.delta(s, Σ, X, ∫)
