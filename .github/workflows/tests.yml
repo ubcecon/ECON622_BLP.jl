@@ -1,7 +1,7 @@
 name: Tests
 on:
   push:
-    branches: ['main', 'ps2']
+    branches: ['main']
     tags: '*'
   pull_request:
 
