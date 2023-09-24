@@ -11,19 +11,21 @@ using SparseGrids
 
 abstract type AbstractIntegrator end
 
-(∫::AbstractIntegrator)(f::Function) = sum(w*f(x) for (w,x) in zip(∫.w, ∫.x))
+(∫::AbstractIntegrator)(f::Function) = #sum(∫.w[i]*f(∫.x[i]) for i in eachindex(∫.x))
+    sum(w*f(x) for (x,w) in zip(∫.x, ∫.w))
 
 struct FixedNodeIntegrator{Tx,Tw} <: AbstractIntegrator
     x::Tx
     w::Tw
 end
 
-MonteCarloIntegrator(distribution::Distribution, ndraw=100)=FixedNodeIntegrator([rand(distribution) for i=1:ndraw], Repeated(1/ndraw))
+MonteCarloIntegrator(distribution::Distribution, ndraw=100)=
+  FixedNodeIntegrator([rand(distribution) for i=1:ndraw], fill(1/ndraw, ndraw))
 
 function QuasiMonteCarloIntegrator(distribution::UnivariateDistribution, ndraws=100)
     ss = skip(SobolSeq(1), ndraw)
     x = [quantile(distribution, x) for x in take(ss,ndraw)]
-    w = Repeated(1/ndraw)
+    w = fill(1/ndraw, ndraw) #repeated(1/ndraw, ndraw)
     FixedNodeIntegrator(x,w)
 end 
 
@@ -31,7 +33,7 @@ function QuasiMonteCarloIntegrator(distribution::AbstractMvNormal, ndraw=100)
     ss = skip(SobolSeq(length(distribution)), ndraw)
     L = cholesky(distribution.Σ).L
     x = [L*quantile.(Normal(), x) for x in take(ss,ndraw)]
-    w = Repeated(1/ndraw)
+    w = fill(1/ndraw, ndraw) #repeated(1/ndraw, ndraw)
     FixedNodeIntegrator(x,w)
 end 
 
@@ -60,8 +62,6 @@ struct AdaptiveIntegrator{FE,FT,FJ,A,L} <: AbstractIntegrator
     limits::L
 end
 
-(∫::AdaptiveIntegrator)(f::Function) = ∫.eval(t->f(∫.transform(t))*∫.detJ(t), ∫.limits...; ∫.args...)[1]
-
 function AdaptiveIntegrator(dist::AbstractMvNormal; eval=hcubature, options=())
     D = length(dist)
     x(t) = t./(1 .- t.^2)
@@ -70,5 +70,7 @@ function AdaptiveIntegrator(dist::AbstractMvNormal; eval=hcubature, options=())
     limits = (-ones(D), ones(D))
     AdaptiveIntegrator(hcubature,x,Dx,args, limits)
 end
+
+(∫::AdaptiveIntegrator)(f::Function) = ∫.eval(t->f(∫.transform(t))*∫.detJ(t), ∫.limits...; ∫.args...)[1]
 
 end

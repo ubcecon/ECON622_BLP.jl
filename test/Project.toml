@@ -1,0 +1,8 @@
+[deps]
+AbbreviatedStackTraces = "ac637c84-cc71-43bf-9c33-c1b4316be3d4"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
