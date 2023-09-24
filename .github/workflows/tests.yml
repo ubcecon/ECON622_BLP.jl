@@ -1,5 +1,4 @@
-name: Documentation
-
+name: Tests
 on:
   push:
     branches: ['main', 'ps2']
