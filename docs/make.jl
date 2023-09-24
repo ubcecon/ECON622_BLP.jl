@@ -6,12 +6,13 @@ makedocs(;
            "Home" => "index.md",
            "Function Reference" => "functions.md"
          ],
-         repo="https://github.com/UBCECON/ECON622_BLP.jl/blob/{commit}{path}#L{line}",
+         repo=Remotes.GitHub("UBCECON","ECON622_BLP.jl"),
          sitename="ECON622_BLP.jl",
          #doctest=false,
          authors="Paul Schrimpf <schrimpf@mail.ubc.ca>"
          #assets=String[],
+         #plugins=[bib]
 )
 
 
-deploydocs(repo="github.com/UBCECON/ECON622_BLP.jl.git")
+deploydocs(repo="github.com/UBCECON/ECON622_BLP.jl.git", branch="gh-pages")
