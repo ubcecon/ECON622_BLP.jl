@@ -1,4 +1,5 @@
-using Test
+using Test, TestItemRunner
+
 
 #=
  # Just do this once
@@ -8,14 +9,11 @@ Pkg.develop(path=normpath(joinpath(@__DIR__, "..")))
 Pkg.activate(@__DIR__)
  =#
 
-import ECON622_BLP as BLP
-import ECON622_BLP: Integrate
-using Distributions, LinearAlgebra
 
-@testset "All Tests" begin
-    
-
-@testset "integrator" begin
+@testitem "integrator" begin
+    import ECON622_BLP as BLP
+    import ECON622_BLP: Integrate
+    using Distributions, LinearAlgebra
     # includet("../src/integrate.jl") # for interactive execution
     
     dimx = 3
@@ -52,9 +50,11 @@ using Distributions, LinearAlgebra
     end
 end
 
-@testset "share=δ⁻¹" begin
-    # includet("../src/blp.jl") 
-    using LinearAlgebra, Distributions
+@testitem "share=δ⁻¹" begin    
+    import ECON622_BLP as BLP
+    import ECON622_BLP: Integrate
+    using Distributions, LinearAlgebra
+
     J = 4
     dimx=2
     dx = MvNormal(dimx, 1.0)
@@ -86,7 +86,11 @@ end
     end
 end
 
-@testset "differentialibility" begin
+@testitem "differentialibility" begin
+    import ECON622_BLP as BLP
+    import ECON622_BLP: Integrate
+    using Distributions, LinearAlgebra
+
     import FiniteDiff, ForwardDiff, Enzyme, Zygote
     import Enzyme: Active, Const, Duplicated
 
@@ -117,8 +121,7 @@ end
         @test isapprox(Jfd, Enzyme.jacobian(Enzyme.Forward, dfn, s), rtol=1e-4)
         @test isapprox(Jfd, Enzyme.jacobian(Enzyme.Reverse, dfn, s, Val(J)), rtol=1e-4)
     end
-    
-
+  
 end
 
-end
+@run_package_tests

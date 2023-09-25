@@ -109,4 +109,15 @@ function EnzymeRules.reverse(config::ConfigWidth{W}, f::Const{typeof(delta!)}, d
   return(nothing, nothing, nothing,nothing,nothing)
 end
 
+function broken!(x)
+  out = 0
+  for i ∈ eachindex(x)
+    out+=exp(x[i]) 
+  end
+  x[1] = x[length(x)+1]
+  return(out)
+end
+
+
+
 end
