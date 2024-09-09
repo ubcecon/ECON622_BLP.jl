@@ -15,6 +15,7 @@ format:
       boardmarker-width: 2
       chalk-width: 2
       chalk-effect: 0.0
+engine: julia
 ---
 
 $$
@@ -67,7 +68,7 @@ $$
 
 ## Shares: version 1
 
-```julia
+```{julia}
 function share(δ, Σ, dFν, x)
   function shareν(ν)
     s = exp.(δ .+ x*Σ*ν)
@@ -86,7 +87,7 @@ end
 
 ## Shares: version 2
 
-```julia
+```{julia}
 @doc raw"""
     share(δ, Σ, dFν, x)
 
@@ -126,26 +127,83 @@ end
 :::
 
 ## Integration: Monte-Carlo
-```julia
+```{julia}
 using Distributions, Statistics
 ∫mc(f, dx; ndraw=100)=mean(f(rand(dx)) for i in 1:ndraw)
 ```
 
-## Integration: Monte-Carlo
-```julia
+```{julia}
+module EC
+
+mutable struct EvaluationCounter
+  f::Function
+  n::Int
+end
+
+EvaluationCounter(f) = EvaluationCounter(f, 0)
+
+function (ec::EvaluationCounter)(x)
+  ec.n += 1
+  return ec.f(x)
+end
+
+import Base: show
+function show(io::IO, ec::EvaluationCounter)
+  print(io, "evaluated $(ec.f) $(ec.n) times")
+end
+
+function reset!(ec::EvaluationCounter)
+  ec.n = 0
+end
+
+end
+
+using Distributions
+dx = Normal(0, 1)
+
+f = EC.EvaluationCounter(x->x^2)
+trueint = 1.0
+
+EC.reset!(f)
+intmc = ∫mc(f, dx, ndraw=100)
+@show intmc, trueint, intmc-trueint
+@show f
+EC.reset!(f)
+```
+
+## Integration: Quasi-Monte-Carlo
+
+- Use "low discrepency sequences" to reduce variance of Monte-Carlo integrals
+- Error is $O\left(\frac{\log(n)^d}{n})$ for integrating $d$ dimensional function with $n$ draws
+- See [Owen (2023)](https://artowen.su.domains/mc/practicalqmc.pdf) for details
+
+```{julia}
 using Sobol
 import Base.Iterators: take
-function ∫s(f,dx::ZeroMeanIsoNormal;ndraw=100)
+function ∫s(f,dx::AbstractMvNormal;ndraw=100)
   marginals = [Normal(dx.μ[i], sqrt(dx.Σ[i,i])) for i in 1:length(dx)]
   invcdf(x) = quantile.(marginals,x)
   ss = skip(SobolSeq(length(dx)),ndraw)
   mean(f(invcdf(x)) for x in take(ss,ndraw))
 end
+
+function ∫s(f,dx::Normal;ndraw=100)
+  invcdf(x) = quantile(dx,x)
+  ss = skip(SobolSeq(length(dx)),ndraw)
+  mean(f(invcdf(x[1])) for x in take(ss,ndraw))
+end
+```
+
+```{julia}
+f = x->x^2
+S = 1_000
+@show mean(abs(∫s(f,dx,ndraw=100) - trueint) for s in 1:S)
+@show mean(abs(∫mc(f,dx,ndraw=100) - trueint) for s in 1:S)
 ```
 
 ## Integration: Quadrature
 
-```julia
+```{julia}
 using FastGaussQuadrature, LinearAlgebra
 import Base.Iterators: product, repeated
 function ∫q(f, dx::MvNormal; ndraw=100)
@@ -161,7 +219,7 @@ end
 
 ## Integration: Sparse Grid Quadrature
 
-```julia
+```{julia}
 using SparseGrids
 function ∫sgq(f, dx::MvNormal; order=5)
   X, W = sparsegrid(length(dx), order, gausshermite, sym=true)
@@ -170,9 +228,9 @@ function ∫sgq(f, dx::MvNormal; order=5)
 end
 ```
 
-## Integration: Cubature
+## Integration: Adaptive Cubature
 
-```julia
+```{julia}
 using HCubature
 function ∫cuba(f, dx; rtol=1e-4)
   D = length(dx)
