@@ -1,7 +1,15 @@
+name = "ECON622_BLP"
+uuid = "04c43c4b-146f-4579-99e2-63279d378c20"
+authors = ["Paul Schrimpf <paul.schrimpf@ubc.ca>"]
+version = "0.0.1"
+
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 Sobol = "ed01d8cd-4d21-5b2a-85b4-cc3bdc58bad4"
 SparseGrids = "bafbe729-afc6-5148-bb4f-226bf3d46895"
