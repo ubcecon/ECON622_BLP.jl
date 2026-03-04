@@ -14,4 +14,4 @@ makedocs(;
     #plugins=[bib]
 )
 
-deploydocs(;repo="github.com/UBCECON/ECON622_BLP.jl.git", branch="gh-pages")
+deploydocs(;repo="ubcecon/ECON622_BLP.jl", branch="gh-pages")
