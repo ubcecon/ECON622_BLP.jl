@@ -3,9 +3,9 @@ using Test, Distributions, ECON622_BLP, LinearAlgebra
 @testset "integrator" begin
     dimx = 3
     A = rand(dimx,dimx)
-    Σ = A*A'
+    Σ = A*A' + I
     dx = MvNormal(zeros(dimx), Σ)
-    ∫a = Integrate.AdaptiveIntegrator(dx, options=(rtol=1e-6,initdiv=3))
+    ∫a = Integrate.AdaptiveIntegrator(dx, options=(rtol=1e-6, ))
     V = ∫a(x->x*x')
     @test isapprox(V, Σ, rtol=1e-3)
 
