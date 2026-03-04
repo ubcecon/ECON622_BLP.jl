@@ -1,13 +1,14 @@
-module BLP
+module ECON622_BLP
 
-import NLsolve
+import SimpleNonlinearSolve: solve, NonlinearProblem, SimpleTrustRegion
+import LinearAlgebra: norm
 
 include("integrate.jl")
 
 @doc raw"""
     share(δ, Σ, dFν, x)
 
-Computes shares in random coefficient logit with mean tastes `δ`, observed characteristics `x`, unobserved taste distribution `dFν`, and taste covariances `Σ`. 
+Computes shares in random coefficient logit with mean tastes `δ`, observed characteristics `x`, unobserved taste distribution `dFν`, and taste covariances `Σ`.
 Assumes there is an outside option with u=0. The outside option has share `1-sum(s)`
 
 # Arguments
@@ -37,15 +38,19 @@ function share(δ, Σ, x, ∫::Integrate.AbstractIntegrator)
 end
 
 function delta(s, Σ, x, ∫)
-  function eqns!(F,δ) 
-    F .= s - share(δ,Σ,x,∫)
-  end
-  δ0 = log.(s) .- log(1-sum(s))
-  sol=NLsolve.nlsolve(eqns!, δ0, autodiff=:forward, method=:trust_region)
-  if (sol.residual_norm > 1e-4)
-    @warn "Possible problem in delta(s, ...)\n".*"$sol"
-  end
-  return(sol.zero)
+    p = (Σ=Σ, x=x, ∫=∫, s=s)
+    function F(δ,p)
+        p.s - share(δ,p.Σ,p.x,p.∫)
+    end
+    δ0 = log.(s) .- log(1-sum(s))
+    prob = NonlinearProblem(F, δ0, p)
+    sol = solve(prob, SimpleTrustRegion())
+    if (norm(sol.resid) > 1e-4)
+        @warn "Possible problem in delta(s, ...)\n".*"$sol"
+    end
+    return(sol.u)
 end
+
+export share, delta, Integrate
 
 end
